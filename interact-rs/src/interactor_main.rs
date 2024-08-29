@@ -1,10 +1,13 @@
 #![allow(non_snake_case)]
+#![allow(dead_code)]
+#![allow(unused_imports)]
 
 mod proxy;
 
 use multiversx_sc_snippets::imports::*;
 use multiversx_sc_snippets::sdk;
 use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use std::{
     io::{Read, Write},
     path::Path,
@@ -31,9 +34,9 @@ async fn main() {
         "issue_fungible" => interact.issue_fungible().await,
         "set_roles" => interact.set_roles().await,
         "create_nft" => interact.create_nft().await,
-        "update_attributes" => interact.update_attributes().await,
+        "update_attributes" => interact.update_attributes(String::new()).await,
         "send_nft" => interact.send_nft().await,
-        "nft_token_id" => interact.nft_token_id().await,
+        // "nft_token_id" => interact.nft_token_id().await,
         "test_token_mapper" => interact.test_token_mapper().await,
         _ => panic!("unknown command: {}", &cmd),
     }
@@ -172,10 +175,10 @@ impl ContractInteract {
     }
 
     async fn issue_fungible(&mut self) {
-        let egld_amount = BigUint::<StaticApi>::from(0u128);
+        let egld_amount = BigUint::<StaticApi>::from(ISSUE_COST);
 
-        let token_name = ManagedBuffer::new_from_bytes(&b""[..]);
-        let token_ticker = ManagedBuffer::new_from_bytes(&b""[..]);
+        let token_name = ManagedBuffer::new_from_bytes(TOKEN_NAME.as_bytes());
+        let token_ticker = ManagedBuffer::new_from_bytes(TOKEN_TICKER.as_bytes());
         let initial_supply = 0u64;
 
         let response = self
@@ -213,7 +216,7 @@ impl ContractInteract {
     }
 
     async fn create_nft(&mut self) {
-        let to = bech32::decode("");
+        let to = self.wallet_address.clone();
 
         let response = self
             .interactor
@@ -231,10 +234,9 @@ impl ContractInteract {
         println!("Result: {response:?}");
     }
 
-    async fn update_attributes(&mut self) {
-        let token_id = String::new();
-        let token_nonce = 0u64;
-        let token_amount = BigUint::<StaticApi>::from(0u128);
+    async fn update_attributes(&mut self, token_id: String) {
+        let token_nonce = 1u64;
+        let token_amount = BigUint::<StaticApi>::from(1u128);
 
         let new_attributes = ManagedBuffer::new_from_bytes(&b""[..]);
 
@@ -279,7 +281,7 @@ impl ContractInteract {
         println!("Result: {response:?}");
     }
 
-    async fn nft_token_id(&mut self) {
+    async fn nft_token_id(&mut self) -> String {
         let result_value = self
             .interactor
             .query()
@@ -291,7 +293,7 @@ impl ContractInteract {
             .run()
             .await;
 
-        println!("Result: {result_value:?}");
+        result_value.to_string()
     }
 
     async fn test_token_mapper(&mut self) {
@@ -319,6 +321,7 @@ async fn test_deploy() {
 #[tokio::test]
 async fn test_issue_fungible_token_mapper() {
     let mut interact = ContractInteract::new().await;
+    interact.issue_fungible().await;
     interact.issue_fungible_token_mapper().await;
 }
 
@@ -338,34 +341,4 @@ async fn test_issue_fungible() {
 async fn test_set_roles() {
     let mut interact = ContractInteract::new().await;
     interact.set_roles().await;
-}
-
-#[tokio::test]
-async fn test_create_nft() {
-    let mut interact = ContractInteract::new().await;
-    interact.create_nft().await;
-}
-
-#[tokio::test]
-async fn test_update_attributes() {
-    let mut interact = ContractInteract::new().await;
-    interact.update_attributes().await;
-}
-
-#[tokio::test]
-async fn test_send_nft() {
-    let mut interact = ContractInteract::new().await;
-    interact.send_nft().await;
-}
-
-#[tokio::test]
-async fn test_nft_token_id() {
-    let mut interact = ContractInteract::new().await;
-    interact.nft_token_id().await;
-}
-
-#[tokio::test]
-async fn test_test_token_mapper() {
-    let mut interact = ContractInteract::new().await;
-    interact.test_token_mapper().await;
 }
