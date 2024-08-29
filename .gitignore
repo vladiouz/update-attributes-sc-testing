@@ -1,0 +1,10 @@
+/target/
+*/target/
+
+# The mxpy output
+/output*/
+
+# Mandos test trace
+trace*.scen.json
+
+wallet.pem
